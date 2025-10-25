@@ -1,0 +1,22 @@
+apiVersion: v1
+data:
+  download.sh: "#!/bin/bash\nset -ex\n\nJOB_DIR=\"/mnt/nfs/jobs/download-buildai-dataset\"\nDATA_DIR=\"${JOB_DIR}/data\"\nLOG_FILE=\"${JOB_DIR}/${POD_NAME}.log\"\n\nmain()
+    {\n  echo \"Updating package list and installing dependencies...\"\n  apt-get
+    update && apt-get install -y curl python3 aria2\n  echo \"Destination: $DATA_DIR\"\n
+    \ mkdir -p \"$DATA_DIR\"\n  cd \"$DATA_DIR\"\n  \n  echo \"Fetching latest dataset
+    manifest...\"\n  FUNCTION_URL=\"https://us-west2-data-470400.cloudfunctions.net/generate-download\"\n
+    \ MANIFEST=$(curl -sf \"$FUNCTION_URL?format=json\" || { echo \"Failed to fetch
+    manifest\"; exit 1; })\n  \n  echo \"Generating download list for aria2...\"\n
+    \ cat > /tmp/create_list.py <<EOF\nimport sys, json, os\nmanifest = json.load(sys.stdin)\nwith
+    open('aria2-input.txt', 'w') as f:\n    for file_info in manifest['files']:\n
+    \       path = file_info['path']\n        url = file_info['url']\n        dir_name
+    = os.path.dirname(path)\n        file_name = os.path.basename(path)\n        f.write(f'{url}\\n')\n
+    \       if dir_name:\n            f.write(f'  dir={dir_name}\\n')\n        f.write(f'
+    \ out={file_name}\\n')\nEOF\n  echo \"$MANIFEST\" | python3 /tmp/create_list.py\n\n
+    \ echo \"Starting parallel download with aria2c...\"\n  aria2c -j 16 -x 16 -i
+    aria2-input.txt --continue=true --auto-file-renaming=false\n  echo \"Download
+    complete!\"\n}\n\nmkdir -p \"$JOB_DIR\"\nmain 2>&1 | tee \"$LOG_FILE\"\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: download-script

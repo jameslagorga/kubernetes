@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-buildai-dataset
+spec:
+  backoffLimit: 10
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: downloader
+        image: ubuntu:latest
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command: ["/bin/bash", "/scripts/download.sh"]
+        volumeMounts:
+        - name: nfs-volume
+          mountPath: "/mnt/nfs"
+        - name: script-volume
+          mountPath: "/scripts"
+      volumes:
+      - name: nfs-volume
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+      - name: script-volume
+        configMap:
+          name: download-script
+          defaultMode: 0755 # Make the script executable

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: youtube-recorder
+spec:
+  template:
+    spec:
+      nodeSelector:
+        node-pool-type: default-pool
+      containers:
+      - name: stream-recorder
+        image: gcr.io/lagorgeous-helping-hands/stream-recorder:latest
+        imagePullPolicy: Always
+        command: ["./record_youtube.sh"]
+        args:
+        - "https://www.youtube.com/watch?v=e-hufY3rjik"
+        - "/mnt/nfs"
+        - "lofi_hip_hop_radio"
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      restartPolicy: Never
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+  backoffLimit: 4

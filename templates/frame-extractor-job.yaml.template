@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: frame-extractor-__JOB_ID__
+spec:
+  template:
+    spec:
+      nodeSelector:
+        node-pool-type: default-pool
+      containers:
+      - name: ffmpeg-extractor
+        image: jrottenberg/ffmpeg
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        - |
+          (
+            VIDEO_DIR="/mnt/nfs/streams/__JOB_ID__/videos"
+            LATEST_VIDEO=$(ls -t ${VIDEO_DIR}/*.m3u8 | head -1)
+            if [ -z "${LATEST_VIDEO}" ]; then
+              echo "No video file found for job __JOB_ID__"
+              exit 1
+            fi
+            echo "Latest video is ${LATEST_VIDEO}"
+            mkdir -p /mnt/nfs/streams/__JOB_ID__/frames
+            ffmpeg -i ${LATEST_VIDEO} -vf fps=1 /mnt/nfs/streams/__JOB_ID__/frames/frame_%08d.png
+          ) 2>&1 | tee /mnt/nfs/jobs/frame-extractor/${POD_NAME}-ffmpeg.log
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      - name: pubsub-publisher
+        image: google/cloud-sdk:slim
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        - |
+          (
+            FRAMES_DIR="/mnt/nfs/streams/__JOB_ID__/frames"
+            # Wait for the first frame to appear
+            while [ ! -f "${FRAMES_DIR}/frame_00000001.png" ]; do
+              echo "Waiting for frames to be extracted..."
+              sleep 5
+            done
+            echo "Publishing frames from ${FRAMES_DIR}..."
+            for frame_path in $(ls ${FRAMES_DIR}/frame_*.png); do
+              echo "Publishing message for ${frame_path}"
+              MESSAGE="{\"job_id\": \"__JOB_ID__\", \"frame_path\": \"${frame_path}\"}"
+              gcloud pubsub topics publish frame-processing-topic --project=lagorgeous-helping-hands --message="${MESSAGE}"
+            done
+            echo "Finished publishing all frames."
+          ) 2>&1 | tee /mnt/nfs/jobs/frame-extractor/${POD_NAME}-pubsub.log
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+        - name: gcloud-adc-secret-volume
+          mountPath: /secrets/gcloud
+        envFrom:
+        - secretRef:
+            name: gcloud-adc-secret
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+      - name: gcloud-adc-secret-volume
+        secret:
+          secretName: gcloud-adc-secret
+      restartPolicy: OnFailure
