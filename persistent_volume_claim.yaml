@@ -6,6 +6,7 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: filestore-csi
+  volumeName: filestore-pv
   resources:
     requests:
       storage: 1024Gi

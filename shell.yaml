@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: shell
-    image: ubuntu:latest # You can use any shell image
+    image: google/cloud-sdk:slim # You can use any shell image
     command: ['sleep', '3600']
     volumeMounts:
     - name: nfs-volume
