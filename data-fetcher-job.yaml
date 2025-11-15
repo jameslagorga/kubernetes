@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-fetcher
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+      containers:
+      - name: data-fetcher
+        image: gcr.io/lagorgeous-helping-hands/hamer:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Fetching demo data and models..."
+          cd /app/hamer && ./fetch_demo_data.sh && \
+          echo "Data fetched. Copying to NFS..." && \
+          cp -r -v ./_DATA/* /mnt/nfs/_DATA/ && \
+          echo "Copy complete."
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+  backoffLimit: 4

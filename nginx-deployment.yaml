@@ -41,6 +41,7 @@ metadata:
   name: nginx-service
 spec:
   type: LoadBalancer
+  loadBalancerIP: 35.197.63.186
   selector:
     app: nginx
   ports:

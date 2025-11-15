@@ -11,7 +11,7 @@ spec:
   storageClassName: filestore-csi
   csi:
     driver: filestore.csi.storage.gke.io
-    volumeHandle: "10.63.204.10:/fileshare"
+    volumeHandle: "10.59.124.226:/fileshare"
     volumeAttributes:
-      ip: "10.63.204.10"
+      ip: "10.59.124.226"
       volume: "fileshare"
