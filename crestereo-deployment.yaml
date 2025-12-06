@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crestereo-deployment
+  labels:
+    app: crestereo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crestereo
+  template:
+    metadata:
+      labels:
+        app: crestereo
+    spec:
+      nodeSelector:
+        node-pool-type: gpu-pool-l4 # Ensure it runs on a GPU-enabled node
+      containers:
+      - name: crestereo
+        image: gcr.io/lagorgeous-helping-hands/crestereo:latest # CREStereo Docker image
+        imagePullPolicy: Always
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        command:
+        - /bin/sh
+        - -c
+        - "echo \"Starting CREStereo inference service...\" && mkdir -p /mnt/nfs/jobs/crestereo && python crestereo_infer.py --project_id=lagorgeous-helping-hands --subscription_id=crestereo-vision-subscription 2>&1 | tee /mnt/nfs/jobs/crestereo/${POD_NAME}.log"
+        resources:
+          limits:
+            nvidia.com/gpu: "1" # Request a GPU
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs # Mount your shared storage
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc # Your Persistent Volume Claim
+      restartPolicy: Always

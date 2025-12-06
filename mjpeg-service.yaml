@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mjpeg-service
+  labels:
+    app: mjpeg-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mjpeg-service
+  template:
+    metadata:
+      labels:
+        app: mjpeg-service
+    spec:
+      containers:
+      - name: mjpeg-service
+        image: gcr.io/lagorgeous-helping-hands/mjpeg-service:latest
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mjpeg-service
+spec:
+  selector:
+    app: mjpeg-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
