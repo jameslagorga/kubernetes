@@ -1,30 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mjpeg-service
+  name: mjpeg
   labels:
-    app: mjpeg-service
+    app: mjpeg
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mjpeg-service
+      app: mjpeg
   template:
     metadata:
       labels:
-        app: mjpeg-service
+        app: mjpeg
     spec:
       containers:
-      - name: mjpeg-service
-        image: gcr.io/lagorgeous-helping-hands/mjpeg-service:latest
+      - name: mjpeg
+        image: gcr.io/binocular-cv/mjpeg:latest
         ports:
         - containerPort: 8080
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
         volumeMounts:
         - name: nfs-storage
           mountPath: /mnt/nfs
@@ -36,10 +30,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mjpeg-service
+  name: mjpeg
 spec:
   selector:
-    app: mjpeg-service
+    app: mjpeg
   ports:
     - name: http
       protocol: TCP

@@ -25,8 +25,7 @@ spec:
         - name: nfs-storage
           mountPath: /usr/share/nginx/html
         - name: nginx-conf
-          mountPath: /etc/nginx/conf.d/default.conf
-          subPath: nginx.conf
+          mountPath: /etc/nginx/conf.d/
       volumes:
       - name: nfs-storage
         persistentVolumeClaim:
@@ -41,7 +40,7 @@ metadata:
   name: nginx-service
 spec:
   type: LoadBalancer
-  loadBalancerIP: 35.197.63.186
+  loadBalancerIP: 104.199.112.127
   selector:
     app: nginx
   ports:
