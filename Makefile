@@ -1,9 +1,12 @@
 # This Makefile provides a command to refresh the NFS storage.
 # WARNING: This will permanently delete all data on the NFS volume.
 
-.PHONY: refresh-nfs
+.PHONY: replace-nfs replace-nginx
 
-restore-nfs: delete-nginx delete-pvc delete-pv apply-pv apply-pvc apply-nginx-conf apply-nginx
+replace-nginx: apply-nginx-conf
+	kubectl rollout restart deployment/nginx-deployment
+
+replace-nfs: delete-nginx delete-pvc delete-pv apply-pv apply-pvc apply-nginx-conf apply-nginx
 
 apply-nginx:
 	kubectl apply -f nginx-deployment.yaml
