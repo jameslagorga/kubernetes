@@ -17,8 +17,18 @@ spec:
       containers:
       - name: mjpeg
         image: gcr.io/binocular-cv/mjpeg:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        - "echo \"Starting MJPEG service...\" && mkdir -p /mnt/nfs/jobs/mjpeg && ./mjpeg 2>&1 | tee /mnt/nfs/jobs/mjpeg/${POD_NAME}.log"
         volumeMounts:
         - name: nfs-storage
           mountPath: /mnt/nfs
