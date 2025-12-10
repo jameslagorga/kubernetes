@@ -28,7 +28,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "echo \"Starting MJPEG service...\" && mkdir -p /mnt/nfs/jobs/mjpeg && ./mjpeg 2>&1 | tee /mnt/nfs/jobs/mjpeg/${POD_NAME}.log"
+        - "echo \"Starting MJPEG service...\" && mkdir -p /mnt/nfs/jobs/mjpeg && ./mjpeg 2>&1 | stdbuf -o0 tee /mnt/nfs/jobs/mjpeg/${POD_NAME}.log"
         volumeMounts:
         - name: nfs-storage
           mountPath: /mnt/nfs
