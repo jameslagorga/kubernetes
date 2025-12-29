@@ -18,7 +18,7 @@ spec:
         node-pool-type: gpu-pool-l4 # Ensure it runs on a GPU-enabled node
       containers:
       - name: crestereo
-        image: gcr.io/lagorgeous-helping-hands/crestereo:latest # CREStereo Docker image
+        image: gcr.io/binocular-cv/crestereo:latest # CREStereo Docker image
         imagePullPolicy: Always
         env:
         - name: POD_NAME
@@ -30,7 +30,7 @@ spec:
         command:
         - /bin/sh
         - -c
-        - "echo \"Starting CREStereo inference service...\" && mkdir -p /mnt/nfs/jobs/crestereo && python crestereo_infer.py --project_id=lagorgeous-helping-hands --subscription_id=crestereo-vision-subscription 2>&1 | tee /mnt/nfs/jobs/crestereo/${POD_NAME}.log"
+        - "echo \"Starting CREStereo inference service...\" && mkdir -p /mnt/nfs/jobs/crestereo && python crestereo_infer.py --project_id=binocular-cv --subscription_id=crestereo-vision-subscription 2>&1 | tee /mnt/nfs/jobs/crestereo/${POD_NAME}.log"
         resources:
           limits:
             nvidia.com/gpu: "1" # Request a GPU

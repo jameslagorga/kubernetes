@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calibration-server-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calibration-server
+  template:
+    metadata:
+      labels:
+        app: calibration-server
+    spec:
+      nodeSelector:
+        node-pool-type: default-pool
+      containers:
+      - name: calibration-server
+        image: gcr.io/binocular-cv/calibration-server:latest
+        env:
+        - name: GCP_PROJECT_ID
+          value: "binocular-cv"
+        - name: SUBSCRIPTION_ID
+          value: "calibration-server-subscription"
+        - name: MJPEG_SERVICE_URL
+          value: "http://mjpeg:8080"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        - "echo 'Starting calibration-server service...' && mkdir -p /mnt/nfs/jobs/calibration-server && /usr/local/bin/calibration-server 2>&1 | tee /mnt/nfs/jobs/calibration-server/${POD_NAME}.log"
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: calibration-server-service
+spec:
+  selector:
+    app: calibration-server
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

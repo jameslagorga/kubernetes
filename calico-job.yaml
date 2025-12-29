@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: calico-calibration
+spec:
+  ttlSecondsAfterFinished: 0
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: calico-calibration
+        image: gcr.io/binocular-cv/calico:latest
+        command:
+        - /bin/sh
+        - -c
+        - "echo \"Starting calico calibration job...\" && mkdir -p /mnt/nfs/jobs/calico-calibration && /usr/local/bin/calibrate.sh 2>&1 | tee /mnt/nfs/jobs/calico-calibration/${POD_NAME}.log"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc

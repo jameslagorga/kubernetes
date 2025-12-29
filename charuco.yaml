@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: charuco
+  labels:
+    app: charuco
+spec:
+  ttlSecondsAfterFinished: 300  # Clean up job 5 minutes after completion
+  backoffLimit: 3  # Retry up to 3 times on failure
+  template:
+    metadata:
+      labels:
+        app: charuco
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: charuco
+        image: gcr.io/binocular-cv/charuco:latest
+        imagePullPolicy: Always
+        command:
+        - /bin/sh
+        - -c
+        - "echo \"Starting ChArUco board generation...\" && mkdir -p /mnt/nfs/jobs/charuco && python generate_charuco.py --active_width_mm 518.4 --active_height_mm 324.0 --resolution_width_px 1920 --resolution_height_px 1200 --output_path /mnt/nfs/calibration/charuco_board.png --output_json_path /mnt/nfs/calibration/charuco_board.json 2>&1 | tee /mnt/nfs/jobs/charuco/${POD_NAME}.log"
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+

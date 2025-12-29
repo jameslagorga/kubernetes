@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go2rtc-deployment
+  labels:
+    app: go2rtc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go2rtc
+  template:
+    metadata:
+      labels:
+        app: go2rtc
+    spec:
+      containers:
+      - name: go2rtc
+        image: alexxit/go2rtc:latest
+        imagePullPolicy: Always
+        command: ["/usr/local/bin/go2rtc"]
+        args: ["-config", "/etc/go2rtc/go2rtc.yaml"]
+        ports:
+        - containerPort: 1984
+        - containerPort: 8888
+        - containerPort: 8889
+        - containerPort: 8890
+        - containerPort: 8891
+        - containerPort: 8892
+        - containerPort: 8893
+        - containerPort: 8894
+        - containerPort: 8895
+        - containerPort: 8896
+        - containerPort: 8897
+        - containerPort: 8555
+        - containerPort: 8554
+        volumeMounts:
+        - name: go2rtc-config-volume
+          mountPath: /etc/go2rtc/go2rtc.yaml
+          subPath: go2rtc.yaml
+      volumes:
+      - name: go2rtc-config-volume
+        configMap:
+          name: go2rtc-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go2rtc-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: go2rtc
+  ports:
+  - name: http-api
+    protocol: TCP
+    port: 1984
+    targetPort: 1984
+  - name: mpegts-0
+    protocol: TCP
+    port: 8888
+    targetPort: 8888
+  - name: mpegts-1
+    protocol: TCP
+    port: 8889
+    targetPort: 8889
+  - name: mpegts-2
+    protocol: TCP
+    port: 8890
+    targetPort: 8890
+  - name: mpegts-3
+    protocol: TCP
+    port: 8891
+    targetPort: 8891
+  - name: mpegts-4
+    protocol: TCP
+    port: 8892
+    targetPort: 8892
+  - name: mpegts-5
+    protocol: TCP
+    port: 8893
+    targetPort: 8893
+  - name: mpegts-6
+    protocol: TCP
+    port: 8894
+    targetPort: 8894
+  - name: mpegts-7
+    protocol: TCP
+    port: 8895
+    targetPort: 8895
+  - name: mpegts-8
+    protocol: TCP
+    port: 8896
+    targetPort: 8896
+  - name: mpegts-9
+    protocol: TCP
+    port: 8897
+    targetPort: 8897
+  - name: webrtc
+    protocol: TCP
+    port: 8555
+    targetPort: 8555
+  - name: rtsp
+    protocol: TCP
+    port: 8554
+    targetPort: 8554

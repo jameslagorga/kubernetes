@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go2rtc-config
+data:
+  go2rtc.yaml: |
+    api:
+      listen: ":1984"
+    webrtc:
+      listen: ":8555"
+    streams:
+      mpegts_camera_0:
+        - tcp://:8888
+      mpegts_camera_1:
+        - tcp://:8889
+      mpegts_camera_2:
+        - tcp://:8890
+      mpegts_camera_3:
+        - tcp://:8891
+      mpegts_camera_4:
+        - tcp://:8892
+      mpegts_camera_5:
+        - tcp://:8893
+      mpegts_camera_6:
+        - tcp://:8894
+      mpegts_camera_7:
+        - tcp://:8895
+      mpegts_camera_8:
+        - tcp://:8896
+      mpegts_camera_9:
+        - tcp://:8897

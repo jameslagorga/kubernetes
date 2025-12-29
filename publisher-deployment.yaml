@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: publisher-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: publisher
+  template:
+    metadata:
+      labels:
+        app: publisher
+    spec:
+      nodeSelector:
+        node-pool-type: default-pool
+      containers:
+      - name: publisher
+        image: gcr.io/binocular-cv/publisher:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        - "echo \"Starting publisher service...\" && mkdir -p /mnt/nfs/jobs/publisher && ./publisher 2>&1 | tee /mnt/nfs/jobs/publisher/${POD_NAME}.log"
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: publisher-service
+spec:
+  selector:
+    app: publisher
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080

@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rectification
+spec:
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: rectification
+        image: gcr.io/binocular-cv/rectification:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          echo "Starting rectification job..." &&
+          LOG_DIR="/mnt/nfs/jobs/rectification" &&
+          mkdir -p "${LOG_DIR}" &&
+          python /app/generate_maps.py 2>&1 | tee "${LOG_DIR}/${POD_NAME}.log"
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc
