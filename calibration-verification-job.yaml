@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: calibration-verification
+  labels:
+    app: calibration-verification
+spec:
+  ttlSecondsAfterFinished: 0 # Clean up job immediately after completion
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: calibration-verification
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: verification
+        image: gcr.io/binocular-cv/calibration-verification:latest
+        imagePullPolicy: Always
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        command:
+        - /bin/sh
+        - -c
+        # TODO: The calibration directory should be passed as an argument
+        - "echo \"Starting calibration verification...\" && mkdir -p /mnt/nfs/jobs/calibration-verification && python verify_reprojection.py /mnt/nfs/calibration/calico_output_20251231-044230 2>&1 | tee /mnt/nfs/jobs/calibration-verification/${POD_NAME}.log"
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/nfs
+      volumes:
+      - name: nfs-storage
+        persistentVolumeClaim:
+          claimName: filestore-pvc

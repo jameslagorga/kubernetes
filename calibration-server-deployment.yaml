@@ -23,7 +23,7 @@ spec:
         - name: SUBSCRIPTION_ID
           value: "calibration-server-subscription"
         - name: MJPEG_SERVICE_URL
-          value: "http://mjpeg:8080"
+          value: "http://mjpeg:80"
         - name: POD_NAME
           valueFrom:
             fieldRef:
